@@ -8,8 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
@@ -18,11 +16,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 public class SecurityConfig {
 
     private final UserRepository userRepository;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private final GoogleOAuth2UserService googleOAuth2UserService;
+    private final GoogleOidcUserService googleOidcUserService;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -45,7 +40,7 @@ public class SecurityConfig {
         http
                 // ✅ Giữ CSRF (chuẩn). Logout sẽ cần token trong form.
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/css/**", "/js/**", "/images/**", "/error/**").permitAll()
+                        .requestMatchers("/auth/**", "/oauth2/**", "/login/oauth2/**", "/css/**", "/js/**", "/images/**", "/error/**").permitAll()
 
                         // Admin
                         .requestMatchers("/books/new", "/books/*/edit").hasRole("ADMIN")
@@ -67,6 +62,14 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/books", true)
                         .failureUrl("/auth/login?error")
                         .permitAll()
+                )
+                .oauth2Login(oauth -> oauth
+                        .loginPage("/auth/login")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(googleOAuth2UserService)
+                                .oidcUserService(googleOidcUserService)
+                        )
+                        .defaultSuccessUrl("/books", true)
                 )
                 .logout(logout -> logout
                         // ✅ Đồng bộ với layout: POST /logout

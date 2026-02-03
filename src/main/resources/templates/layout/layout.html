@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${pageTitle != null ? pageTitle : 'Book Store'}">Book Store</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"/>
+</head>
+
+<body class="app-body">
+
+<nav class="navbar navbar-expand-lg navbar-dark app-navbar">
+    <div class="container app-container">
+        <a class="navbar-brand app-brand d-flex align-items-center gap-2" th:href="@{/}">
+            <span>BookStore</span>
+            <span class="badge">2026</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="nav" class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/books}">Sách</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/cart}">Giỏ hàng</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2">
+                <div sec:authorize="isAuthenticated()" class="text-white-50 small">
+                    Xin chào, <span class="text-white" sec:authentication="name">user</span>
+                </div>
+
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="mb-0">
+                    <button class="btn btn-outline-light btn-sm" type="submit">Đăng xuất</button>
+                </form>
+
+                <a sec:authorize="isAnonymous()" class="btn btn-outline-light btn-sm" th:href="@{/login}">
+                    Đăng nhập
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container app-container py-4">
+    <div th:if="${content != null}"
+         th:replace="~{__${content}__}">
+    </div>
+
+    <div th:if="${content == null}" class="alert alert-warning">
+        Trang này chưa được gắn <b>content</b> fragment từ controller.
+    </div>
+</main>
+
+<footer class="py-3 border-top">
+    <div class="container app-container text-center text-muted small">
+        © <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> BookStore
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

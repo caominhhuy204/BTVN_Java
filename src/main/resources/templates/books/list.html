@@ -1,0 +1,76 @@
+﻿<div th:fragment="content"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+    <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4 reveal">
+        <div>
+            <h3 class="mb-1">Danh sách sách</h3>
+            <div class="app-muted">Tìm kiếm, quản lý và thêm sách vào giỏ.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" sec:authorize="hasRole('ADMIN')" th:href="@{/books/new}">Thêm sách</a>
+        </div>
+    </div>
+
+    <form class="app-card soft p-3 p-md-4 row g-2 mb-4 reveal" th:action="@{/books}" method="get">
+        <div class="col-md-8">
+            <input class="form-control" name="q" th:value="${q}" placeholder="Tìm theo tiêu đề hoặc tác giả...">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button class="btn btn-primary w-100" type="submit">Tìm kiếm</button>
+            <a class="btn btn-outline-secondary w-100" th:href="@{/books}">Xóa lọc</a>
+        </div>
+    </form>
+
+    <div class="app-card p-0 reveal">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tiêu đề</th>
+                    <th>Tác giả</th>
+                    <th>Giá</th>
+                    <th>Danh mục</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(books)}">
+                    <td colspan="6" class="text-center text-muted py-4">Chưa có sách nào.</td>
+                </tr>
+
+                <tr th:each="b : ${books}">
+                    <td th:text="${b.id}"></td>
+                    <td class="fw-semibold" th:text="${b.title}"></td>
+                    <td th:text="${b.author}"></td>
+                    <td th:text="${#numbers.formatDecimal(b.price,1,'COMMA',2,'POINT')} + ' ₫'"></td>
+                    <td>
+                        <span class="badge-soft" th:text="${b.category != null ? b.category.name : '-'}"></span>
+                    </td>
+
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end gap-2">
+                            <form th:action="@{/cart/add/{id}(id=${b.id})}" method="post" class="mb-0">
+                                <button class="btn btn-success btn-sm" type="submit">Thêm</button>
+                            </form>
+
+                            <a class="btn btn-outline-dark btn-sm" th:href="@{/books/{id}/detail(id=${b.id})}">Xem</a>
+
+                            <a class="btn btn-warning btn-sm" sec:authorize="hasRole('ADMIN')"
+                               th:href="@{/books/{id}/edit(id=${b.id})}">Sửa</a>
+
+                            <form sec:authorize="hasRole('ADMIN')"
+                                  th:action="@{/books/{id}/delete(id=${b.id})}" method="post"
+                                  class="mb-0"
+                                  onsubmit="return confirm('Xóa sách này?');">
+                                <button class="btn btn-danger btn-sm" type="submit">Xóa</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

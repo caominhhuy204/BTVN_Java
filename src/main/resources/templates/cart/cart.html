@@ -1,0 +1,49 @@
+﻿<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
+    <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4 reveal">
+        <div>
+            <h3 class="mb-1">Giỏ hàng</h3>
+            <div class="app-muted">Kiểm tra số lượng và tổng tiền.</div>
+        </div>
+        <a class="btn btn-outline-dark" th:href="@{/books}">Tiếp tục mua</a>
+    </div>
+
+    <div class="app-card p-3 p-md-4 reveal">
+        <div th:if="${cart == null or cart.empty}" class="text-center text-muted py-5">
+            Giỏ hàng đang trống.
+        </div>
+
+        <div th:if="${cart != null and !cart.empty}" class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Tiêu đề</th>
+                    <th class="text-end">Giá</th>
+                    <th class="text-end">Số lượng</th>
+                    <th class="text-end">Thành tiền</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="it : ${cart.items.values()}">
+                    <td th:text="${it.title}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(it.price,1,'COMMA',2,'POINT')} + ' ₫'"></td>
+                    <td class="text-end" th:text="${it.quantity}"></td>
+                    <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(it.total,1,'COMMA',2,'POINT')} + ' ₫'"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="d-flex justify-content-end mt-3">
+                <div class="app-card soft p-3" style="min-width: 280px;">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Tổng cộng</span>
+                        <span class="fw-bold" th:text="${#numbers.formatDecimal(cart.grandTotal,1,'COMMA',2,'POINT')} + ' ₫'"></span>
+                    </div>
+
+                    <form class="mt-3" th:action="@{/cart/checkout}" method="post">
+                        <button class="btn btn-primary w-100" type="submit">Thanh toán</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

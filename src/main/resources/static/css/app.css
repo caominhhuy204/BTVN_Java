@@ -1,0 +1,152 @@
+﻿:root {
+  --ink: #1f2430;
+  --muted: #5c6573;
+  --bg: #f3f4f8;
+  --panel: #ffffff;
+  --brand: #1f6feb;
+  --brand-2: #00b3a4;
+  --accent: #ff8a3d;
+  --ring: rgba(31, 111, 235, 0.25);
+}
+
+* { box-sizing: border-box; }
+
+body.app-body {
+  font-family: "Source Sans 3", "Segoe UI", Tahoma, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1000px 600px at -10% -10%, rgba(31, 111, 235, 0.12), transparent 60%),
+    radial-gradient(900px 500px at 110% 0%, rgba(0, 179, 164, 0.10), transparent 60%),
+    var(--bg);
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: "Space Grotesk", "Source Sans 3", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.app-container {
+  max-width: 1100px;
+}
+
+.app-navbar {
+  background: rgba(20, 24, 33, 0.92) !important;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.app-brand .badge {
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+}
+
+.app-hero {
+  background: linear-gradient(120deg, rgba(31, 111, 235, 0.14), rgba(0, 179, 164, 0.14));
+  border: 1px solid rgba(31, 111, 235, 0.1);
+  border-radius: 20px;
+  padding: 24px 26px;
+}
+
+.app-card {
+  background: var(--panel);
+  border-radius: 18px;
+  border: 1px solid rgba(15, 20, 30, 0.08);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+}
+
+.app-card.soft {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.app-muted { color: var(--muted); }
+
+.table {
+  margin-bottom: 0;
+}
+
+.table thead th {
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.table tbody tr:hover {
+  background: rgba(31, 111, 235, 0.05);
+}
+
+.form-control, .form-select {
+  border-radius: 12px;
+  border-color: rgba(15, 20, 30, 0.15);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 0.2rem var(--ring);
+}
+
+.btn {
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.btn-primary {
+  background: linear-gradient(120deg, var(--brand), #2a9df4);
+  border: none;
+  box-shadow: 0 10px 22px rgba(31, 111, 235, 0.22);
+}
+
+.btn-success {
+  background: linear-gradient(120deg, #14b86b, #17d193);
+  border: none;
+}
+
+.btn-warning {
+  background: linear-gradient(120deg, #f1c453, #f3a546);
+  border: none;
+  color: #1f2430;
+}
+
+.btn-outline-dark {
+  border-color: rgba(31, 36, 48, 0.3);
+}
+
+.badge-soft {
+  background: rgba(31, 111, 235, 0.1);
+  color: var(--brand);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+}
+
+.app-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+}
+
+.app-auth .app-card {
+  width: 100%;
+  max-width: 520px;
+}
+
+.reveal {
+  animation: rise 0.5s ease both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+footer {
+  background: rgba(255, 255, 255, 0.9);
+}

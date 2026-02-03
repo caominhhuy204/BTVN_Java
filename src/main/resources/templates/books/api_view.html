@@ -1,0 +1,53 @@
+﻿<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
+  <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4 reveal">
+    <div>
+      <h3 class="mb-1">Danh sách sách (API)</h3>
+      <div class="app-muted">Dữ liệu được tải từ API và render trực tiếp.</div>
+    </div>
+    <a class="btn btn-outline-dark" th:href="@{/books}">Quay lại MVC</a>
+  </div>
+
+  <div class="app-card p-3 p-md-4 reveal">
+    <div id="loading" class="text-muted">Đang tải dữ liệu từ API...</div>
+
+    <div class="table-responsive d-none" id="tableWrap">
+      <table class="table table-hover align-middle">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tiêu đề</th>
+          <th>Tác giả</th>
+          <th>Giá</th>
+          <th>Danh mục</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      try {
+        const res = await fetch('/api/books');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        document.getElementById('tbody').innerHTML = data.map(b => `
+          <tr>
+            <td>${b.id}</td>
+            <td><b>${b.title}</b></td>
+            <td>${b.author}</td>
+            <td>${(b.price ?? 0).toLocaleString('vi-VN')} ₫</td>
+            <td>${b.categoryName ?? '-'}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('loading').classList.add('d-none');
+        document.getElementById('tableWrap').classList.remove('d-none');
+      } catch (e) {
+        document.getElementById('loading').innerText = 'Lỗi gọi API: ' + e.message;
+      }
+    })();
+  </script>
+</div>

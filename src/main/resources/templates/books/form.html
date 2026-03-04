@@ -1,4 +1,4 @@
-﻿<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
+﻿﻿<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
   <div class="app-card p-4 p-md-5 reveal">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
@@ -11,17 +11,18 @@
     <form class="row g-3"
           th:object="${book}"
           th:action="${book.id == null} ? @{/books} : @{/books/{id}(id=${book.id})}"
-          method="post">
+          method="post"
+          enctype="multipart/form-data">
 
       <div class="col-md-6">
         <label class="form-label">Tiêu đề</label>
-        <input class="form-control" th:field="*{title}">
+        <input id="bookTitle" class="form-control" th:field="*{title}">
         <div class="text-danger small" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
       </div>
 
       <div class="col-md-6">
         <label class="form-label">Tác giả</label>
-        <input class="form-control" th:field="*{author}">
+        <input id="bookAuthor" class="form-control" th:field="*{author}">
         <div class="text-danger small" th:if="${#fields.hasErrors('author')}" th:errors="*{author}"></div>
       </div>
 
@@ -40,10 +41,144 @@
         <div class="text-danger small" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
       </div>
 
+      <div class="col-md-6">
+        <label class="form-label">Ảnh bìa (tải lên)</label>
+        <input id="coverFile" name="coverFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp">
+        <div class="text-muted small">Nếu không tải lên, có thể nhập URL trực tiếp.</div>
+        <input class="form-control mt-2" placeholder="Hoặc dán URL ảnh bìa" th:field="*{coverUrl}">
+        <div class="d-flex gap-2 mt-2">
+          <button class="btn btn-outline-primary btn-sm" type="button" id="aiFillBtn">Nhận từ AI</button>
+          <span id="aiStatus" class="text-muted small"></span>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Tồn kho</label>
+        <input type="number" min="0" class="form-control" th:field="*{stock}">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Mô tả</label>
+        <textarea class="form-control" rows="4" th:field="*{description}"></textarea>
+      </div>
+
       <div class="col-12 d-flex gap-2">
         <button class="btn btn-primary" type="submit">Lưu</button>
         <a class="btn btn-outline-secondary" th:href="@{/books}">Quay lại</a>
       </div>
     </form>
   </div>
+
+  <script th:inline="javascript">
+    const coverInput = document.getElementById('coverFile');
+    const coverUrlInput = document.getElementById('coverUrl');
+    const titleInput = document.getElementById('bookTitle');
+    const authorInput = document.getElementById('bookAuthor');
+    const isEditing = /*[[${book.id != null}]]*/ false;
+    let lastFileNameBase = null;
+
+    function autoFillFromFilename(fileName) {
+      if (!fileName) return;
+      const base = fileName.replace(/\.[^.]+$/, '');
+      const cleaned = base.replace(/[_\.]+/g, ' ').trim();
+      const parts = cleaned.split(/\s*-\s*/).filter(Boolean);
+
+      if (parts.length >= 2) {
+        // Heuristic: try both orders, keep existing text if already filled
+        const first = parts[0].trim();
+        const second = parts.slice(1).join(' ').trim();
+
+        if (!titleInput.value) titleInput.value = first;
+        if (!authorInput.value) authorInput.value = second;
+
+        if (!titleInput.value || !authorInput.value) {
+          // Swap if the first attempt didn't fill both (e.g., admin named file "Author - Title")
+          if (!titleInput.value) titleInput.value = second;
+          if (!authorInput.value) authorInput.value = first;
+        }
+      } else {
+        if (!titleInput.value) titleInput.value = cleaned;
+      }
+    }
+
+    coverInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const base = file.name.replace(/\.[^.]+$/, '').replace(/[_\.]+/g, ' ').trim().toLowerCase();
+        lastFileNameBase = base;
+        autoFillFromFilename(file.name);
+      }
+    });
+
+    async function fileFromUrl(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Không tải được ảnh (${res.status})`);
+      const blob = await res.blob();
+      const type = blob.type || 'image/jpeg';
+      const ext = type.includes('png') ? '.png' : type.includes('webp') ? '.webp' : '.jpg';
+      return new File([blob], 'cover-from-url' + ext, {type});
+    }
+
+    async function extractWithAI(file) {
+      const status = document.getElementById('aiStatus');
+      status.textContent = 'Đang nhận diện...';
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const res = await fetch('/api/ai/cover/extract', {
+          method: 'POST',
+          body: fd
+        });
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(`Gọi AI thất bại (${res.status}): ${msg}`);
+        }
+        const data = await res.json();
+        const currentTitle = titleInput.value?.trim().toLowerCase();
+        const currentAuthor = authorInput.value?.trim().toLowerCase();
+        if (data.title && (!currentTitle || (lastFileNameBase && currentTitle === lastFileNameBase))) {
+          titleInput.value = data.title;
+        }
+        if (data.author && (!currentAuthor || (lastFileNameBase && currentAuthor === lastFileNameBase))) {
+          authorInput.value = data.author;
+        }
+        status.textContent = 'Đã nhận diện (có thể chỉnh sửa).';
+      } catch (err) {
+        status.textContent = 'Không nhận diện được: ' + err.message;
+      }
+    }
+
+    document.getElementById('aiFillBtn')?.addEventListener('click', async () => {
+      let file = coverInput?.files?.[0];
+      if (!file && coverUrlInput?.value?.trim()) {
+        try {
+          file = await fileFromUrl(coverUrlInput.value.trim());
+        } catch (err) {
+          alert('Không thể tải ảnh từ URL: ' + err.message);
+          return;
+        }
+      }
+      if (!file) {
+        alert('Chọn một file ảnh bìa hoặc nhập URL trước.');
+        return;
+      }
+      await extractWithAI(file);
+    });
+
+    // Ưu tiên tự nhận diện bằng AI khi chỉnh sửa và thiếu tiêu đề/tác giả
+    (async function autoAiOnEdit() {
+      if (!isEditing) return;
+      const missingTitle = !titleInput?.value?.trim();
+      const missingAuthor = !authorInput?.value?.trim();
+      const coverUrl = coverUrlInput?.value?.trim();
+      if (!coverUrl || (!missingTitle && !missingAuthor)) return;
+      try {
+        const file = await fileFromUrl(coverUrl);
+        await extractWithAI(file);
+      } catch (err) {
+        const status = document.getElementById('aiStatus');
+        status.textContent = 'Không tự nhận diện được: ' + err.message;
+      }
+    })();
+  </script>
 </div>

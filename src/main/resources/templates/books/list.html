@@ -4,7 +4,7 @@
 
     <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4 reveal">
         <div>
-            <h3 class="mb-1">Danh sách sách</h3>
+            <h3 class="mb-1">Danh sách </h3>
             <div class="app-muted">Tìm kiếm, quản lý và thêm sách vào giỏ.</div>
         </div>
         <div class="d-flex gap-2">
@@ -12,11 +12,42 @@
         </div>
     </div>
 
+    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show reveal" role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show reveal" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <form class="app-card soft p-3 p-md-4 row g-2 mb-4 reveal" th:action="@{/books}" method="get">
-        <div class="col-md-8">
+        <input type="hidden" name="page" value="0">
+        <input type="hidden" name="size" th:value="${size}">
+        <input type="hidden" name="sort" th:value="${sort}">
+        <input type="hidden" name="dir" th:value="${dir}">
+        <div class="col-12 col-lg-4">
             <input class="form-control" name="q" th:value="${q}" placeholder="Tìm theo tiêu đề hoặc tác giả...">
         </div>
-        <div class="col-md-4 d-flex gap-2">
+        <div class="col-6 col-lg-2">
+            <input class="form-control" type="number" name="minPrice" min="0" step="any"
+                   th:value="${minPrice}" placeholder="Giá từ">
+        </div>
+        <div class="col-6 col-lg-2">
+            <input class="form-control" type="number" name="maxPrice" min="0" step="any"
+                   th:value="${maxPrice}" placeholder="Giá đến">
+        </div>
+        <div class="col-12 col-lg-2">
+            <select class="form-select" name="categoryId">
+                <option value="" th:selected="${categoryId == null}">Tất cả danh mục</option>
+                <option th:each="c : ${categories}"
+                        th:value="${c.id}"
+                        th:text="${c.name}"
+                        th:selected="${categoryId != null and categoryId == c.id}">
+                </option>
+            </select>
+        </div>
+        <div class="col-12 col-lg-2 d-flex gap-2 flex-column flex-lg-row">
             <button class="btn btn-primary w-100" type="submit">Tìm kiếm</button>
             <a class="btn btn-outline-secondary w-100" th:href="@{/books}">Xóa lọc</a>
         </div>
@@ -31,29 +62,51 @@
                     <th>Tiêu đề</th>
                     <th>Tác giả</th>
                     <th>Giá</th>
+                    <th>Tồn kho</th>
                     <th>Danh mục</th>
                     <th class="text-end">Thao tác</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:if="${#lists.isEmpty(books)}">
+                <tr th:if="${booksPage == null or #lists.isEmpty(booksPage.content)}">
                     <td colspan="6" class="text-center text-muted py-4">Chưa có sách nào.</td>
                 </tr>
 
-                <tr th:each="b : ${books}">
+                <tr th:each="b : ${booksPage.content}">
                     <td th:text="${b.id}"></td>
-                    <td class="fw-semibold" th:text="${b.title}"></td>
+                    <td class="fw-semibold"
+                        th:with="raw=${b.coverUrl},
+                                 hasCover=${raw != null and !#strings.isEmpty(raw)},
+                                 imgUrl=${hasCover and #strings.startsWith(raw,'http') ? raw
+                                           : hasCover and #strings.startsWith(raw,'/') ? raw
+                                           : hasCover ? '/' + raw : '/images/sample/default.png'}">
+                        <div class="d-flex align-items-center gap-2">
+                          <img th:src="${imgUrl}" alt=""
+                               onerror="this.src='/images/sample/default.png';"
+                               style="width:40px;height:60px;object-fit:cover;border-radius:4px;">
+                          <div>
+                            <span th:text="${b.title}"></span>
+                            <span class="badge bg-danger-subtle text-danger" th:if="${b.discontinued}">Ngừng bán</span>
+                          </div>
+                        </div>
+                    </td>
                     <td th:text="${b.author}"></td>
-                    <td th:text="${#numbers.formatDecimal(b.price,1,'COMMA',2,'POINT')} + ' ₫'"></td>
+                    <td th:text="${#numbers.formatDecimal(b.price,1,'COMMA',0,'POINT')} + ' đ'"></td>
                     <td>
-                        <span class="badge-soft" th:text="${b.category != null ? b.category.name : '-'}"></span>
+                        <span th:text="${b.stock}"></span>
+                        <span class="text-muted small" th:if="${b.stock == null}">0</span>
+                    </td>
+                    <td>
+                        <span class="badge-soft" th:text="${b.category != null ? b.category.name : 'Đã gỡ danh mục'}"></span>
                     </td>
 
                     <td class="text-end">
                         <div class="d-flex justify-content-end gap-2">
-                            <form th:action="@{/cart/add/{id}(id=${b.id})}" method="post" class="mb-0">
+                            <form th:if="${!b.discontinued && (b.stock != null ? b.stock > 0 : false)}" th:action="@{/cart/add/{id}(id=${b.id})}" method="post" class="mb-0">
                                 <button class="btn btn-success btn-sm" type="submit">Thêm</button>
                             </form>
+                            <span class="text-muted small" th:if="${b.discontinued}">Đã ngừng bán</span>
+                            <span class="text-muted small" th:if="${!b.discontinued && (b.stock != null ? b.stock <= 0 : true)}">Hết hàng</span>
 
                             <a class="btn btn-outline-dark btn-sm" th:href="@{/books/{id}/detail(id=${b.id})}">Xem</a>
 
@@ -71,6 +124,25 @@
                 </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3" th:if="${booksPage != null}">
+        <div class="text-muted small">
+            Trang <span th:text="${booksPage.number + 1}"></span>/<span th:text="${booksPage.totalPages}"></span>
+            - Tổng <span th:text="${booksPage.totalElements}"></span> sách
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary btn-sm"
+               th:classappend="${booksPage.first} ? ' disabled'"
+               th:href="@{/books(page=${booksPage.number - 1}, size=${booksPage.size}, q=${q}, categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, dir=${dir})}">
+                « Trước
+            </a>
+            <a class="btn btn-outline-secondary btn-sm"
+               th:classappend="${booksPage.last} ? ' disabled'"
+               th:href="@{/books(page=${booksPage.number + 1}, size=${booksPage.size}, q=${q}, categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, sort=${sort}, dir=${dir})}">
+                Sau »
+            </a>
         </div>
     </div>
 </div>

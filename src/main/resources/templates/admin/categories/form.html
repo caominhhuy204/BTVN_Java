@@ -1,0 +1,28 @@
+<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
+  <div class="app-card p-4 p-md-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h3 class="mb-1" th:text="${category.id == null ? 'Thêm danh mục' : 'Cập nhật danh mục'}"></h3>
+        <div class="app-muted">Tên danh mục phải duy nhất.</div>
+      </div>
+      <span class="badge-soft" th:text="${category.id == null ? 'Tạo mới' : 'Chỉnh sửa'}"></span>
+    </div>
+
+    <form th:action="${category.id == null} ? @{/admin/categories} : @{/admin/categories/{id}(id=${category.id})}"
+          th:object="${category}"
+          method="post"
+          class="vstack gap-3">
+
+      <div>
+        <label class="form-label">Tên danh mục</label>
+        <input class="form-control" th:field="*{name}">
+        <div class="text-danger small" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Lưu</button>
+        <a class="btn btn-outline-secondary" th:href="@{/admin/categories}">Quay lại</a>
+      </div>
+    </form>
+  </div>
+</div>

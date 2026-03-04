@@ -8,30 +8,143 @@
             <span class="badge-soft" th:text="${book.category != null ? book.category.name : '-'}"></span>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="app-muted">Tiêu đề</div>
-                <div class="fw-semibold" th:text="${book.title}"></div>
-            </div>
-            <div class="col-md-6">
-                <div class="app-muted">Tác giả</div>
-                <div class="fw-semibold" th:text="${book.author}"></div>
-            </div>
-            <div class="col-md-6">
-                <div class="app-muted">Giá</div>
-                <div class="fw-semibold" th:text="${#numbers.formatDecimal(book.price,1,'COMMA',2,'POINT')} + ' ₫'"></div>
-            </div>
-            <div class="col-md-6">
-                <div class="app-muted">Danh mục</div>
-                <div class="fw-semibold" th:text="${book.category != null ? book.category.name : '-'}"></div>
+        <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="mb-3 d-flex flex-wrap gap-2">
+                    <span class="badge bg-success" th:if="${!book.discontinued and book.stock > 0}">Còn hàng</span>
+                    <span class="badge bg-secondary" th:if="${!book.discontinued and book.stock <= 0}">Hết hàng</span>
+                    <span class="badge bg-danger" th:if="${book.discontinued}">Ngừng bán</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="app-muted">Tiêu đề</div>
+                        <div class="fw-semibold" th:text="${book.title}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="app-muted">Tác giả</div>
+                        <div class="fw-semibold" th:text="${book.author}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="app-muted">Giá</div>
+                        <div class="fw-semibold" th:text="${#numbers.formatDecimal(book.price,1,'COMMA',0,'POINT')} + ' đ'"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="app-muted">Danh mục</div>
+                        <div class="fw-semibold" th:text="${book.category != null ? book.category.name : '-'}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="app-muted">Tồn kho</div>
+                        <div class="fw-semibold" th:text="${book.stock}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="app-muted">Điểm trung bình</div>
+                        <div class="fw-semibold" th:text="${#numbers.formatDecimal(avgRating,1,'COMMA',1,'POINT')} + ' / 5'"></div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <div class="app-muted">Mô tả</div>
+                    <div th:text="${book.description ?: 'Chưa có mô tả'}"></div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3 flex-wrap">
+                    <form th:if="${book.stock > 0 && !book.discontinued}" th:action="@{/cart/add/{id}(id=${book.id})}" method="post">
+                        <button class="btn btn-success" type="submit">Thêm vào giỏ</button>
+                    </form>
+                    <button class="btn btn-outline-secondary" th:if="${book.stock <= 0 || book.discontinued}" disabled>Hết hàng / Ngừng bán</button>
+                    <form th:action="@{/wishlist/toggle}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="bookId" th:value="${book.id}">
+                        <button class="btn" th:classappend="${wished} ? 'btn-warning' : 'btn-outline-warning'" type="submit">
+                            <span th:text="${wished} ? 'Bỏ yêu thích' : 'Yêu thích'"></span>
+                        </button>
+                    </form>
+                    <a class="btn btn-outline-secondary" th:href="@{/books}">Quay lại</a>
+                </div>
             </div>
         </div>
 
-        <div class="d-flex gap-2">
-            <form th:action="@{/cart/add/{id}(id=${book.id})}" method="post">
-                <button class="btn btn-success" type="submit">Thêm vào giỏ</button>
-            </form>
-            <a class="btn btn-outline-secondary" th:href="@{/books}">Quay lại</a>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <h5 class="mb-3">Đánh giá</h5>
+                <form class="app-card p-3 mb-3" th:action="@{/books/{id}/reviews(id=${book.id})}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="parentId" value="">
+                    <div class="row g-2">
+                        <div class="col-12 col-md-3">
+                            <label class="form-label">Điểm (1-5) <span class="text-muted">(tùy chọn)</span></label>
+                            <input class="form-control" type="number" name="rating" min="1" max="5" placeholder="Bỏ trống nếu không chấm">
+                        </div>
+                        <div class="col-12 col-md-9">
+                            <label class="form-label">Nhận xét</label>
+                            <textarea class="form-control" name="comment" rows="2" required></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-2" type="submit">Gửi đánh giá</button>
+                </form>
+
+                <div class="app-card p-3">
+                    <div th:if="${#lists.isEmpty(reviews)}" class="text-muted">Chưa có đánh giá.</div>
+                    <div th:each="r : ${reviews}" class="border-bottom py-2">
+                        <div class="d-flex justify-content-between">
+                            <div class="fw-semibold" th:text="${r.username != null ? r.username : 'Ẩn danh'}"></div>
+                            <div class="text-warning" th:text="${r.rating != null ? r.rating + '★' : 'Chưa chấm'}"></div>
+                        </div>
+                        <div class="text-muted small" th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+                        <div th:text="${r.comment}"></div>
+                        <div class="mt-2">
+                            <form th:action="@{/books/{id}/reviews(id=${book.id})}" method="post" class="d-flex gap-2 align-items-start">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <input type="hidden" name="parentId" th:value="${r.id}">
+                                <input class="form-control form-control-sm" style="max-width:120px" type="number" name="rating" min="1" max="5" placeholder="Điểm">
+                                <input class="form-control form-control-sm" type="text" name="comment" placeholder="Phản hồi..." required>
+                                <button class="btn btn-sm btn-outline-primary" type="submit">Trả lời</button>
+                            </form>
+                        </div>
+                        <div class="ps-3 mt-2 border-start" th:if="${r.replies != null and !r.replies.isEmpty()}">
+                            <div th:each="c : ${r.replies}" class="py-2 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <div class="fw-semibold" th:text="${c.username != null ? c.username : 'Ẩn danh'}"></div>
+                                    <div class="text-warning" th:text="${c.rating != null ? c.rating + '★' : 'Chưa chấm'}"></div>
+                                </div>
+                                <div class="text-muted small" th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+                                <div th:text="${c.comment}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <h5 class="mb-3">Sản phẩm liên quan</h5>
+                        <div class="app-card p-3">
+                            <div th:if="${#lists.isEmpty(relatedBooks)}" class="text-muted">Chưa có gợi ý.</div>
+                            <div th:each="rb : ${relatedBooks}" class="d-flex gap-3 mb-3 align-items-center"
+                                 th:with="raw=${rb.coverUrl},
+                                          hasCover=${raw != null and !#strings.isEmpty(raw)},
+                                          rbImg=${hasCover and #strings.startsWith(raw,'http') ? raw
+                                                   : hasCover and #strings.startsWith(raw,'/') ? raw
+                                                   : hasCover ? '/' + raw : '/images/sample/default.png'}">
+                                <img th:src="@{${rbImg}}" alt=""
+                                     onerror="this.src='/images/sample/default.png';"
+                                     style="width:50px;height:70px;object-fit:cover;border-radius:4px;">
+                        <div>
+                            <div class="fw-semibold" th:text="${rb.title}"></div>
+                            <div class="text-muted small" th:text="${rb.author}"></div>
+                            <a th:href="@{/books/{id}/detail(id=${rb.id})}" class="small">Xem</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

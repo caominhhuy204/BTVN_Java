@@ -1,0 +1,107 @@
+<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
+  <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4">
+    <div>
+      <h3 class="mb-1" th:text="'Đơn hàng #' + ${order.id}"></h3>
+      <div class="app-muted">Xem chi tiết và các mục trong đơn.</div>
+      <div class="mt-2">
+        <span class="badge bg-primary" th:text="${order.status} ?: 'CREATED'"></span>
+        <span class="badge bg-secondary" th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+      </div>
+    </div>
+    <a class="btn btn-outline-secondary" th:href="@{/admin/orders}">Quay lại</a>
+  </div>
+
+  <div class="app-card p-3 p-md-4">
+    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <span th:text="${message}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="app-muted">Khách hàng</div>
+        <div class="fw-semibold" th:text="${order.user != null ? order.user.username : 'Khách'}"></div>
+        <div class="small text-muted" th:text="${order.shippingName}"></div>
+        <div class="small text-muted" th:text="${order.shippingPhone}"></div>
+      </div>
+      <div class="col-md-4">
+        <div class="app-muted">Tổng tiền</div>
+        <div class="fw-semibold" th:text="${#numbers.formatDecimal(order.totalAmount,1,'COMMA',2,'POINT')} + ' ₫'"></div>
+        <div class="small text-muted" th:text="'Phí ship: ' + ${#numbers.formatDecimal(order.shippingFee,1,'COMMA',0,'POINT')} + ' ₫'"></div>
+        <div class="small text-muted" th:text="'Giảm giá: -' + ${#numbers.formatDecimal(order.discount,1,'COMMA',0,'POINT')} + ' ₫'"></div>
+        <div class="small text-muted" th:if="${order.couponCode != null}" th:text="'Mã áp dụng: ' + ${order.couponCode}"></div>
+      </div>
+      <div class="col-md-4">
+        <div class="app-muted">Số mục</div>
+        <div class="fw-semibold" th:text="${#lists.size(order.items)}"></div>
+        <div class="small text-muted" th:text="'Thanh toán: ' + (${order.paymentMethod} ?: 'COD')"></div>
+        <div class="small text-muted" th:text="${order.statusUpdatedAt != null ? 'Cập nhật: ' + #temporals.format(order.statusUpdatedAt, 'dd/MM/yyyy HH:mm') : 'Cập nhật: -'}"></div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-8">
+        <div class="app-muted">Địa chỉ giao hàng</div>
+        <div class="fw-semibold" th:text="${order.shippingAddress}"></div>
+      </div>
+      <div class="col-md-4">
+        <div class="app-muted">Ghi chú của admin</div>
+        <div class="fw-semibold" th:text="${order.adminNote} ?: 'Chưa có'"></div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+        <tr>
+          <th>#</th>
+          <th>Tiêu đề</th>
+          <th>Tác giả</th>
+          <th class="text-end">Giá</th>
+          <th class="text-end">SL</th>
+          <th class="text-end">Thành tiền</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(order.items)}">
+          <td colspan="6" class="text-muted text-center py-4">Đơn hàng không có mục nào.</td>
+        </tr>
+        <tr th:each="it,idx : ${order.items}">
+          <td th:text="${idx.index + 1}"></td>
+          <td th:text="${it.title}"></td>
+          <td th:text="${it.author}"></td>
+          <td class="text-end" th:text="${#numbers.formatDecimal(it.price,1,'COMMA',2,'POINT')} + ' ₫'"></td>
+          <td class="text-end" th:text="${it.quantity}"></td>
+          <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(it.lineTotal,1,'COMMA',2,'POINT')} + ' ₫'"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <form class="mt-4 border rounded-3 p-3" th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Trạng thái</label>
+          <select name="status" class="form-select">
+            <option value="CREATED" th:selected="${order.status == 'CREATED'}">Mới tạo</option>
+            <option value="CONFIRMED" th:selected="${order.status == 'CONFIRMED'}">Đã xác nhận</option>
+            <option value="SHIPPED" th:selected="${order.status == 'SHIPPED'}">Đang giao</option>
+            <option value="DELIVERED" th:selected="${order.status == 'DELIVERED'}">Giao thành công</option>
+            <option value="CANCELLED" th:selected="${order.status == 'CANCELLED'}">Đã hủy</option>
+            <option value="REFUNDED" th:selected="${order.status == 'REFUNDED'}">Hoàn tiền</option>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Ghi chú</label>
+          <input type="text" name="adminNote" class="form-control" th:value="${order.adminNote}" placeholder="Ghi chú cho khách hoặc nội bộ">
+        </div>
+        <div class="col-md-3 d-grid">
+          <button class="btn btn-primary" type="submit">Cập nhật trạng thái</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

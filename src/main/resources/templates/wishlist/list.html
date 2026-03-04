@@ -1,0 +1,50 @@
+<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
+  <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4">
+    <div>
+      <h3 class="mb-1">Danh sách yêu thích</h3>
+      <div class="app-muted">Lưu sách để xem lại nhanh.</div>
+    </div>
+  </div>
+
+  <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+  <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+  <div class="app-card p-0">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+        <tr>
+          <th>Ảnh</th>
+          <th>Tiêu đề</th>
+          <th>Tác giả</th>
+          <th>Giá</th>
+          <th class="text-end">Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(items)}">
+          <td colspan="5" class="text-center text-muted py-3">Chưa có sách yêu thích.</td>
+        </tr>
+        <tr th:each="i : ${items}">
+          <td>
+            <img th:if="${i.book.coverUrl}" th:src="${i.book.coverUrl}" alt="" style="width:40px;height:60px;object-fit:cover;border-radius:4px;">
+          </td>
+          <td th:text="${i.book.title}"></td>
+          <td th:text="${i.book.author}"></td>
+          <td th:text="${#numbers.formatDecimal(i.book.price,1,'COMMA',2,'POINT')} + ' ₫'"></td>
+          <td class="text-end">
+            <div class="d-inline-flex gap-2">
+              <a class="btn btn-outline-dark btn-sm" th:href="@{/books/{id}/detail(id=${i.book.id})}">Xem</a>
+              <form th:action="@{/wishlist/toggle}" method="post" class="mb-0">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="bookId" th:value="${i.book.id}">
+                <button class="btn btn-danger btn-sm" type="submit">Bỏ</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -2,8 +2,31 @@
     <div class="app-card p-4 p-md-5 text-center reveal">
         <div class="app-hero mb-3">
             <h3 class="mb-1">404 - Không tìm thấy</h3>
-            <div class="app-muted">Trang bạn tìm không tồn tại.</div>
+            <div class="app-muted" th:text="${notFoundMessage != null} ? ${notFoundMessage} : 'Trang bạn tìm không tồn tại.'"></div>
         </div>
         <a class="btn btn-outline-dark" th:href="@{/books}">Về trang sách</a>
+    </div>
+
+    <div class="mt-4" th:if="${suggestions != null and !suggestions.isEmpty()}">
+        <h5 class="mb-3 text-center">Có thể bạn sẽ thích</h5>
+        <div class="row g-3 g-md-4">
+            <div class="col-6 col-md-4 col-lg-3" th:each="b : ${suggestions}"
+                 th:with="raw=${b.coverUrl},
+                          hasCover=${raw != null and !#strings.isEmpty(raw)},
+                          imgUrl=${hasCover and #strings.startsWith(raw,'http') ? raw
+                                    : hasCover and #strings.startsWith(raw,'/') ? raw
+                                    : hasCover ? '/' + raw : '/images/sample/default.png'}">
+                <div class="app-card h-100 p-2 text-start">
+                    <div class="ratio ratio-3x4 mb-2">
+                        <img th:src="${imgUrl}" alt=""
+                             onerror="this.src='/images/sample/default.png';"
+                             style="object-fit:cover;border-radius:6px;">
+                    </div>
+                    <div class="fw-semibold small text-truncate" th:text="${b.title}"></div>
+                    <div class="text-muted small text-truncate" th:text="${b.author}"></div>
+                    <a class="small" th:href="@{/books/{id}/detail(id=${b.id})}">Xem</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

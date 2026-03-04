@@ -13,6 +13,7 @@
         </div>
 
         <div th:if="${cart != null and !cart.empty}" class="table-responsive">
+            <div th:if="${param.error}" class="alert alert-warning" th:text="${param.error}"></div>
             <table class="table align-middle">
                 <thead>
                 <tr>
@@ -24,24 +25,84 @@
                 </thead>
                 <tbody>
                 <tr th:each="it : ${cart.items.values()}">
-                    <td th:text="${it.title}"></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span th:text="${it.title}"></span>
+                            <span class="badge bg-danger-subtle text-danger"
+                                  th:if="${discontinuedMap[it.bookId]}">Ngừng bán</span>
+                        </div>
+                    </td>
                     <td class="text-end" th:text="${#numbers.formatDecimal(it.price,1,'COMMA',2,'POINT')} + ' ₫'"></td>
-                    <td class="text-end" th:text="${it.quantity}"></td>
+                    <td class="text-end">
+                        <div class="d-inline-flex align-items-center justify-content-end gap-2">
+                            <form th:action="@{/cart/decrease/{id}(id=${it.bookId})}" method="post" class="mb-0">
+                                <button class="btn btn-outline-secondary btn-sm px-2" type="submit">-</button>
+                            </form>
+                            <span class="fw-semibold" th:text="${it.quantity}"></span>
+                            <form th:action="@{/cart/increase/{id}(id=${it.bookId})}" method="post" class="mb-0">
+                                <button class="btn btn-outline-secondary btn-sm px-2" type="submit">+</button>
+                            </form>
+                        </div>
+                    </td>
                     <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(it.total,1,'COMMA',2,'POINT')} + ' ₫'"></td>
                 </tr>
                 </tbody>
             </table>
 
-            <div class="d-flex justify-content-end mt-3">
-                <div class="app-card soft p-3" style="min-width: 280px;">
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Tổng cộng</span>
-                        <span class="fw-bold" th:text="${#numbers.formatDecimal(cart.grandTotal,1,'COMMA',2,'POINT')} + ' ₫'"></span>
-                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <div class="app-card soft p-3" style="min-width: 280px;">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Tổng cộng</span>
+                                <span class="fw-bold" th:text="${#numbers.formatDecimal(cart.grandTotal,1,'COMMA',2,'POINT')} + ' ₫'"></span>
+                            </div>
 
-                    <form class="mt-3" th:action="@{/cart/checkout}" method="post">
-                        <button class="btn btn-primary w-100" type="submit">Thanh toán</button>
-                    </form>
+                            <form class="mt-3 vstack gap-3" th:action="@{/cart/checkout}" method="post">
+                                <div>
+                                    <label class="form-label">Tên người nhận</label>
+                                    <input name="shippingName" class="form-control" placeholder="VD: Nguyễn Văn A" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Số điện thoại</label>
+                                    <input name="shippingPhone" class="form-control" placeholder="VD: 0901xxxxxx" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Địa chỉ giao hàng</label>
+                                    <textarea name="shippingAddress" class="form-control" rows="2" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" required></textarea>
+                                </div>
+                                <div>
+                                    <label class="form-label">Phương thức thanh toán</label>
+                                    <select name="paymentMethod" class="form-select">
+                                        <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                                        <option value="BANK_TRANSFER">Chuyển khoản</option>
+                                    </select>
+                                </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Phí ship</span>
+                                <span class="fw-semibold">20.000 ₫</span>
+                            </div>
+                            <input type="hidden" name="shippingFee" value="20000"/>
+                            <input type="hidden" name="discount" value="0"/>
+
+                                <div>
+                                    <label class="form-label">Mã giảm giá</label>
+                                    <div class="input-group">
+                                        <input name="couponCode" class="form-control" placeholder="Nhập mã do admin cấp (ví dụ: SAVE20)">
+                                        <span class="input-group-text">Áp dụng khi đặt hàng</span>
+                                    </div>
+                                    <div class="text-muted small mt-1">Nếu mã hợp lệ và còn hiệu lực, hệ thống tự trừ khi tạo đơn; mã sai hoặc bị tắt sẽ báo không hợp lệ.</div>
+                                </div>
+
+                                <button class="btn btn-primary w-100" type="submit"
+                                        th:disabled="${hasDiscontinued}"
+                                        th:title="${hasDiscontinued ? 'Có sản phẩm ngừng bán, vui lòng xóa khỏi giỏ' : ''}">
+                                    Thanh toán
+                                </button>
+                            </form>
+
+                            <div class="text-muted small mt-2">
+                                Sau khi thanh toán, đơn hàng sẽ được lưu vào lịch sử của bạn.
+                                <div th:if="${hasDiscontinued}" class="text-danger">Có sản phẩm đã ngừng bán, vui lòng gỡ khỏi giỏ.</div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -150,3 +150,86 @@ h1, h2, h3, h4, h5 {
 footer {
   background: rgba(255, 255, 255, 0.9);
 }
+
+.metric-card {
+  border: 1px solid rgba(15, 20, 30, 0.06);
+  min-height: 120px;
+}
+
+.metric-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.metric-value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.metric-hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.app-progress {
+  height: 10px;
+  background: rgba(31, 111, 235, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.app-progress .progress-bar {
+  background: linear-gradient(120deg, var(--brand), var(--brand-2));
+}
+
+.category-row {
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(15, 23, 42, 0.08);
+}
+
+.category-row:last-child {
+  border-bottom: none;
+}
+
+.price-band {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.price-visual {
+  position: relative;
+  height: 10px;
+  margin: 8px 0 0;
+}
+
+.price-track {
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 111, 235, 0.15);
+  border-radius: 999px;
+}
+
+.price-dot {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: var(--brand);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 8px 20px rgba(31, 111, 235, 0.35);
+}
+
+.price-dot.max {
+  right: 0;
+  background: var(--accent);
+  box-shadow: 0 8px 20px rgba(255, 138, 61, 0.35);
+}
+
+.price-dot.min {
+  left: 0;
+}

@@ -1,0 +1,2 @@
+ALTER TABLE coupon
+    ADD COLUMN quantity int NOT NULL DEFAULT 0;

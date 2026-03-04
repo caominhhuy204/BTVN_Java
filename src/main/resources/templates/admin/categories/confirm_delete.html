@@ -1,0 +1,47 @@
+<div th:fragment="content" xmlns:th="http://www.thymeleaf.org">
+  <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4">
+    <div>
+      <h3 class="mb-1">Xóa danh mục</h3>
+      <div class="app-muted">Chuyển toàn bộ sách sang danh mục khác trước khi xóa.</div>
+    </div>
+    <a class="btn btn-outline-dark" th:href="@{/admin/categories}">Quay lại danh sách</a>
+  </div>
+
+  <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+  <div class="app-card p-4">
+    <div class="mb-3">
+      <div class="fw-semibold">Danh mục:</div>
+      <div th:text="${category.name}"></div>
+    </div>
+
+    <div class="mb-3">
+      <div class="fw-semibold">Số sách hiện có:</div>
+      <div th:text="${relatedBooks}"></div>
+    </div>
+
+    <form th:action="@{/admin/categories/{id}/delete(id=${category.id})}" method="post" class="d-flex flex-column gap-3">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+      <div th:if="${relatedBooks > 0 && #lists.isEmpty(alternatives)}" class="alert alert-warning">
+        Cần tạo thêm danh mục khác để chuyển sách trước khi xóa.
+      </div>
+
+      <div th:if="${relatedBooks > 0}">
+        <label class="form-label fw-semibold">Chọn danh mục thay thế</label>
+        <select class="form-select" name="targetCategoryId" required>
+          <option value="" disabled selected>-- Chọn danh mục --</option>
+          <option th:each="c : ${alternatives}" th:value="${c.id}" th:text="${c.name}"></option>
+        </select>
+        <div class="form-text">Tất cả sách sẽ được chuyển sang danh mục này.</div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-danger" type="submit"
+                th:disabled="${relatedBooks > 0 and #lists.isEmpty(alternatives)}"
+                th:text="${relatedBooks > 0 ? 'Chuyển & Xóa' : 'Xóa'}"></button>
+        <a class="btn btn-outline-dark" th:href="@{/admin/categories}">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

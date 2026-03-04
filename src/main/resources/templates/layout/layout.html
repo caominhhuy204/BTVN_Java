@@ -39,6 +39,18 @@
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/cart}">Giỏ hàng</a>
                 </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('USER','ADMIN')">
+                    <a class="nav-link" th:href="@{/wishlist}">Yêu thích</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('USER') and !hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/orders}">Lịch sử đơn hàng</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin}">Admin</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/coupons}">Mã giảm giá</a>
+                </li>
             </ul>
 
             <div class="d-flex align-items-center gap-2">
